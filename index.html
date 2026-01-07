@@ -1,0 +1,3155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disaster Preparedness Education Platform</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics-compat.js"></script>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0a0a2a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        /* All existing CSS styles remain exactly the same */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(ellipse at top, #0a0a2a 0%, #000000 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(76, 201, 240, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(67, 97, 238, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ... ALL EXISTING CSS STYLES REMAIN EXACTLY AS THEY ARE ... */
+
+        /* Keep all CSS styles from the original code exactly as they were */
+        .neon-glow {
+            text-shadow: 
+                0 0 5px currentColor,
+                0 0 10px currentColor,
+                0 0 15px currentColor,
+                0 0 20px currentColor;
+        }
+
+        .glow-effect {
+            position: relative;
+            z-index: 1;
+        }
+
+        .glow-effect::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, 
+                #4cc9f0, #4361ee, #3a0ca3, 
+                #7209b7, #f72585, #4cc9f0);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s;
+            animation: glow-pulse 3s infinite;
+        }
+
+        .glow-effect:hover::before {
+            opacity: 0.7;
+        }
+
+        .glow-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 10px 20px rgba(76, 201, 240, 0.3),
+                0 0 30px rgba(67, 97, 238, 0.4),
+                0 0 40px rgba(58, 12, 163, 0.2);
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, 
+                #4cc9f0 0%, #ffffff 50%, #4cc9f0 100%);
+            background-size: 1000px 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shimmer 3s infinite linear;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* Notification Styles */
+        .notification-badge {
+            background: linear-gradient(135deg, #ff4757 0%, #ff2e4d 100%);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            border-radius: 15px;
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .notification-dropdown.show {
+            display: block;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .notification-item.CRITICAL {
+            border-left: 4px solid #ff4757;
+        }
+
+        .notification-item.HIGH {
+            border-left: 4px solid #ffa502;
+        }
+
+        .notification-item.MEDIUM {
+            border-left: 4px solid #4cc9f0;
+        }
+
+        .notification-item.LOW {
+            border-left: 4px solid #2ed573;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 15, 30, 0.8);
+        }
+
+        .clear-notifications {
+            background: transparent;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            color: #ff6b81;
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .clear-notifications:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(76, 201, 240, 0.1) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation: float 20s infinite linear;
+        }
+
+        .login-container::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(67, 97, 238, 0.1) 0%, transparent 70%);
+            bottom: -150px;
+            left: -100px;
+            animation: float 15s infinite linear reverse;
+        }
+
+        .login-box {
+            background: rgba(26, 26, 46, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 50px;
+            border-radius: 25px;
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 100px rgba(76, 201, 240, 0.1);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 2;
+            transition: all 0.5s ease;
+        }
+
+        .login-box:hover {
+            border-color: rgba(76, 201, 240, 0.4);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.6),
+                0 0 120px rgba(76, 201, 240, 0.15);
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 20px rgba(76, 201, 240, 0.5);
+        }
+
+        .login-subtitle {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #a0a0c0;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0d0;
+            font-weight: 500;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(15, 15, 30, 0.8);
+            border: 2px solid rgba(45, 45, 77, 0.5);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            backdrop-filter: blur(5px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4cc9f0;
+            box-shadow: 0 0 20px rgba(76, 201, 240, 0.3);
+            background: rgba(15, 15, 30, 0.9);
+        }
+
+        .form-input::placeholder {
+            color: #666699;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 10px 25px rgba(67, 97, 238, 0.5),
+                0 0 30px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                transparent 20%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 80%
+            );
+            transform: rotate(30deg);
+            transition: transform 0.8s;
+        }
+
+        .btn:hover::after {
+            transform: rotate(30deg) translate(20%, 20%);
+        }
+
+        /* Dashboard Header */
+        .header {
+            background: rgba(26, 26, 46, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 25px 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.3),
+                0 0 50px rgba(76, 201, 240, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            transition: all 0.3s ease;
+        }
+
+        .header:hover {
+            border-color: rgba(76, 201, 240, 0.4);
+            box-shadow: 
+                0 15px 50px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(76, 201, 240, 0.15);
+        }
+
+        .dashboard-title {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #4cc9f0, #7209b7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .user-badge {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-logout {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #ff4d6d 0%, #ff2e4d 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.4);
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: rgba(26, 26, 46, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4cc9f0, #4361ee, #3a0ca3);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(76, 201, 240, 0.4);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 40px rgba(76, 201, 240, 0.2);
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin: 15px 0;
+            text-shadow: 0 0 20px rgba(76, 201, 240, 0.5);
+        }
+
+        /* Disaster Cards */
+        .disaster-card {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.2) 0%, rgba(58, 12, 163, 0.2) 100%);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .disaster-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .disaster-card:hover::before {
+            opacity: 1;
+        }
+
+        .disaster-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(67, 97, 238, 0.4);
+            border-color: rgba(76, 201, 240, 0.5);
+        }
+
+        .disaster-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ffffff, #4cc9f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* Weather Section */
+        .weather-section {
+            background: linear-gradient(135deg, rgba(15, 12, 41, 0.9) 0%, rgba(48, 43, 99, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 40px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.4),
+                0 0 60px rgba(76, 201, 240, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .weather-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #4cc9f0, #4361ee, #7209b7);
+        }
+
+        .weather-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .weather-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Alert Cards */
+        .alert-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            color: #e0e0e0;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 6px solid;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            opacity: 0.7;
+        }
+
+        .alert-card.CRITICAL::before {
+            background: linear-gradient(90deg, #ff4757, #ff2e4d);
+        }
+
+        .alert-card.HIGH::before {
+            background: linear-gradient(90deg, #ffa502, #ff9500);
+        }
+
+        .alert-card.MEDIUM::before {
+            background: linear-gradient(90deg, #4cc9f0, #4361ee);
+        }
+
+        .alert-card.LOW::before {
+            background: linear-gradient(90deg, #2ed573, #1dd1a1);
+        }
+
+        .alert-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 25px;
+            border: 1px solid rgba(76, 201, 240, 0.3);
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(76, 201, 240, 0.2);
+        }
+
+        .option {
+            padding: 20px 25px;
+            background: rgba(15, 15, 30, 0.8);
+            border: 2px solid rgba(45, 45, 77, 0.5);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #e0e0e0;
+            backdrop-filter: blur(5px);
+        }
+
+        .option:hover {
+            border-color: #4361ee;
+            background: rgba(67, 97, 238, 0.15);
+            transform: translateX(10px);
+        }
+
+        .option.selected {
+            border-color: #4361ee;
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.3) 0%, rgba(58, 12, 163, 0.3) 100%);
+            color: white;
+            box-shadow: 0 0 20px rgba(67, 97, 238, 0.3);
+        }
+
+        /* Module Section */
+        .module-section {
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(76, 201, 240, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .module-section:hover {
+            border-color: rgba(76, 201, 240, 0.4);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 15, 30, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            border-radius: 10px;
+            border: 2px solid rgba(15, 15, 30, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .dashboard-title {
+                font-size: 1.8rem;
+            }
+            
+            .stat-value {
+                font-size: 2.8rem;
+            }
+            
+            .notification-dropdown {
+                width: 300px;
+                right: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-box {
+                padding: 30px 25px;
+                margin: 20px;
+            }
+            
+            .dashboard-title {
+                font-size: 1.6rem;
+            }
+            
+            .stat-value {
+                font-size: 2.2rem;
+            }
+            
+            .weather-section,
+            .quiz-container,
+            .module-section {
+                padding: 25px 20px;
+            }
+            
+            .notification-dropdown {
+                width: 280px;
+                max-height: 350px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .login-title {
+                font-size: 2rem;
+            }
+            
+            .btn, .btn-logout {
+                padding: 14px;
+            }
+            
+            .notification-dropdown {
+                width: 250px;
+                right: 5px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(76, 201, 240, 0.3);
+            border-top-color: #4cc9f0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Particle Background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(76, 201, 240, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float-particle 20s infinite linear;
+        }
+
+        @keyframes float-particle {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPv5WDKUww1IgsIIsAjURz2S9KktO5qTg",
+            authDomain: "predis-6b41c.firebaseapp.com",
+            projectId: "predis-6b41c",
+            storageBucket: "predis-6b41c.firebasestorage.app",
+            messagingSenderId: "1019121338224",
+            appId: "1:1019121338224:web:c5c42b92bcc0b8021ab1b5"
+        };
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Constants
+        const DISASTER_TYPES = ['Earthquake', 'Flood', 'Cyclone', 'Tsunami', 'Fire', 'Landslide', 'Pandemic', 'Heatwave', 'Industrial'];
+        const WEATHER_API_KEY = '1b1502f9d22b076e771d65b4ebed6866';
+        
+        const DISASTER_THRESHOLDS = {
+            flood: { rainfall: 50, humidity: 85 },
+            cyclone: { windSpeed: 63, pressure: 980 },
+            heatwave: { temperature: 40 },
+            heavyRain: { rainfall: 20 },
+            storm: { windSpeed: 40 }
+        };
+
+        // Notification Manager
+        const NotificationManager = {
+            showDisasterAlert: (alert) => {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const notification = new Notification(`🚨 ${alert.type} Alert - ${alert.severity} Level`, {
+                        body: alert.message,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3062/3062634.png',
+                        badge: 'https://cdn-icons-png.flaticon.com/512/3062/3062634.png',
+                        tag: 'disaster-alert',
+                        requireInteraction: alert.severity === 'CRITICAL',
+                        vibrate: [200, 100, 200],
+                        actions: [
+                            {
+                                action: 'view-details',
+                                title: 'View Details'
+                            },
+                            {
+                                action: 'dismiss',
+                                title: 'Dismiss'
+                            }
+                        ]
+                    });
+
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                        // Play alert sound for critical alerts
+                        if (alert.severity === 'CRITICAL') {
+                            playAlertSound();
+                        }
+                    };
+
+                    notification.onclose = () => {
+                        console.log('Notification closed');
+                    };
+
+                    return notification;
+                }
+                return null;
+            },
+
+            showQuizReminder: (disaster) => {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    return new Notification(`📚 Disaster Preparedness`, {
+                        body: `Remember to take the ${disaster} quiz to test your knowledge!`,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3062/3062634.png',
+                        tag: 'quiz-reminder'
+                    });
+                }
+                return null;
+            },
+
+            showAchievement: (title, message) => {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    return new Notification(`🎉 ${title}`, {
+                        body: message,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3062/3062634.png',
+                        tag: 'achievement'
+                    });
+                }
+                return null;
+            }
+        };
+
+        // Alert sound function
+        const playAlertSound = () => {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (error) {
+                console.log('Audio playback failed:', error);
+            }
+        };
+
+        const QUESTION_BANK = {
+            Earthquake: [
+                { id: 'eq1', question: 'What should you do immediately during an earthquake?', options: ['Run outside', 'Stand in doorway', 'Drop, Cover, and Hold On', 'Use elevator'], correct: 2, difficulty: 'Easy' },
+                { id: 'eq2', question: 'Which location is safest during an earthquake?', options: ['Near windows', 'Under a sturdy table', 'In an elevator', 'On a staircase'], correct: 1, difficulty: 'Easy' },
+                { id: 'eq3', question: 'What causes earthquakes?', options: ['Weather changes', 'Tectonic plate movement', 'Ocean waves', 'Volcanic eruptions only'], correct: 1, difficulty: 'Medium' },
+                { id: 'eq4', question: 'After an earthquake, you should:', options: ['Rush back inside', 'Check for injuries and damage', 'Ignore aftershocks', 'Use matches for light'], correct: 1, difficulty: 'Medium' },
+                { id: 'eq5', question: 'The Richter scale measures:', options: ['Earthquake duration', 'Earthquake magnitude', 'Building damage', 'Aftershock frequency'], correct: 1, difficulty: 'Hard' },
+                { id: 'eq6', question: 'During an earthquake in a car, you should:', options: ['Speed up to escape', 'Stop safely and stay inside', 'Get out immediately', 'Drive under bridge'], correct: 1, difficulty: 'Medium' },
+                { id: 'eq7', question: 'What is an aftershock?', options: ['First earthquake', 'Smaller quake after main event', 'Earthquake warning', 'Tsunami wave'], correct: 1, difficulty: 'Easy' },
+                { id: 'eq8', question: 'Which floor is safest in an earthquake?', options: ['Basement', 'Ground floor', 'Middle floor', 'Top floor'], correct: 1, difficulty: 'Medium' }
+            ],
+            Flood: [
+                { id: 'fl1', question: 'During a flood, you should move to:', options: ['Basement', 'Ground floor', 'Higher ground', 'Stay in vehicle'], correct: 2, difficulty: 'Easy' },
+                { id: 'fl2', question: 'How much water can move a car?', options: ['6 inches', '12 inches', '2 feet', '3 feet'], correct: 1, difficulty: 'Medium' },
+                { id: 'fl3', question: 'What causes flash floods?', options: ['Slow rainfall', 'Heavy rainfall in short time', 'Ocean tides', 'Groundwater rise'], correct: 1, difficulty: 'Medium' },
+                { id: 'fl4', question: 'Before a flood, you should:', options: ['Ignore warnings', 'Create emergency kit', 'Stay near river', 'Store water in basement'], correct: 1, difficulty: 'Easy' },
+                { id: 'fl5', question: 'Never walk through flood water because:', options: ['It is cold', 'Hidden hazards and currents', 'It is dirty', 'It is illegal'], correct: 1, difficulty: 'Easy' },
+                { id: 'fl6', question: 'What depth of water is dangerous for walking?', options: ['1 inch', '6 inches', '1 foot', '2 feet'], correct: 1, difficulty: 'Medium' },
+                { id: 'fl7', question: 'After a flood, drinking water should be:', options: ['Used immediately', 'Boiled or purified', 'Mixed with juice', 'Ignored'], correct: 1, difficulty: 'Easy' }
+            ],
+            Fire: [
+                { id: 'fi1', question: 'If your clothes catch fire, you should:', options: ['Run', 'Stop, Drop, and Roll', 'Jump in water', 'Remove clothes immediately'], correct: 1, difficulty: 'Easy' },
+                { id: 'fi2', question: 'During a building fire, use:', options: ['Elevator', 'Windows', 'Stairs', 'Wait for help'], correct: 2, difficulty: 'Easy' },
+                { id: 'fi3', question: 'A fire extinguisher rated ABC works on:', options: ['One type of fire', 'All common fires', 'Only electrical', 'Only wood fires'], correct: 1, difficulty: 'Medium' },
+                { id: 'fi4', question: 'Smoke rises because:', options: ['It is light', 'It is hot and less dense', 'Wind pushes it', 'Pressure differences'], correct: 1, difficulty: 'Medium' },
+                { id: 'fi5', question: 'The fire triangle consists of:', options: ['Heat, Fuel, Water', 'Heat, Fuel, Oxygen', 'Smoke, Flame, Heat', 'Fuel, Air, Smoke'], correct: 1, difficulty: 'Hard' },
+                { id: 'fi6', question: 'How often should smoke alarms be tested?', options: ['Weekly', 'Monthly', 'Yearly', 'Never'], correct: 1, difficulty: 'Easy' },
+                { id: 'fi7', question: 'Before opening a door in a fire:', options: ['Kick it open', 'Feel for heat', 'Open immediately', 'Wait 5 minutes'], correct: 1, difficulty: 'Medium' }
+            ],
+            Cyclone: [
+                { id: 'cy1', question: 'What is the eye of a cyclone?', options: ['Strongest part', 'Calm center', 'Outer edge', 'Starting point'], correct: 1, difficulty: 'Medium' },
+                { id: 'cy2', question: 'During a cyclone warning, you should:', options: ['Go to beach', 'Secure loose objects', 'Open windows', 'Ignore it'], correct: 1, difficulty: 'Easy' },
+                { id: 'cy3', question: 'Cyclones form over:', options: ['Land', 'Cold water', 'Warm ocean water', 'Mountains'], correct: 2, difficulty: 'Easy' },
+                { id: 'cy4', question: 'The safest room during a cyclone is:', options: ['Room with windows', 'Interior room', 'Garage', 'Basement near pipes'], correct: 1, difficulty: 'Medium' },
+                { id: 'cy5', question: 'After cyclone passes, you should:', options: ['Go outside immediately', 'Wait for all-clear', 'Check roof', 'Start cleanup'], correct: 1, difficulty: 'Easy' }
+            ],
+            Tsunami: [
+                { id: 'ts1', question: 'A tsunami is caused by:', options: ['High tide', 'Underwater earthquake', 'Strong winds', 'Heavy rain'], correct: 1, difficulty: 'Easy' },
+                { id: 'ts2', question: 'If you feel an earthquake at beach:', options: ['Stay and watch', 'Move to higher ground immediately', 'Go in water', 'Wait for warning'], correct: 1, difficulty: 'Easy' },
+                { id: 'ts3', question: 'How fast can a tsunami travel in open ocean?', options: ['10 mph', '50 mph', '500 mph', '1000 mph'], correct: 2, difficulty: 'Hard' },
+                { id: 'ts4', question: 'A natural tsunami warning sign is:', options: ['Cloudy sky', 'Ocean receding rapidly', 'Hot weather', 'Birds flying'], correct: 1, difficulty: 'Medium' },
+                { id: 'ts5', question: 'How many waves can a tsunami have?', options: ['Always one', 'Multiple waves', 'Exactly three', 'Two waves only'], correct: 1, difficulty: 'Medium' }
+            ]
+        };
+
+        const DISASTER_MODULES = {
+            Earthquake: {
+                overview: 'Earthquakes are sudden ground shaking caused by the movement of tectonic plates beneath Earth\'s surface.',
+                causes: 'Movement of tectonic plates, volcanic activity, human activities like mining',
+                warnings: 'Animals behaving strangely, small tremors (foreshocks), unusual well water levels',
+                preparedness: ['Secure heavy furniture and objects to walls', 'Prepare emergency kit with water, food, first aid', 'Identify safe spots in each room (under sturdy tables)', 'Practice drop, cover, hold on drills regularly'],
+                response: ['Drop, Cover, Hold On if indoors', 'Stay away from windows and heavy objects', 'If outdoors, move to open area away from buildings', 'If in vehicle, stop safely and stay inside until shaking stops'],
+                safety: ['DO: Stay calm and protect your head and neck', 'DO: Check for injuries after shaking stops', 'DON\'T: Use elevators during or after earthquake', 'DON\'T: Stand in doorways (outdated advice)']
+            },
+            Flood: {
+                overview: 'Floods occur when water overflows onto normally dry land, often causing significant damage.',
+                causes: 'Heavy rainfall, dam or levee failure, storm surge, rapid snowmelt, blocked drainage',
+                warnings: 'Weather alerts, rising water levels, unusual rain patterns, dam warnings',
+                preparedness: ['Know your flood risk zone', 'Create evacuation plan with multiple routes', 'Waterproof important documents', 'Install check valves in plumbing to prevent backup'],
+                response: ['Move to higher ground immediately', 'Never walk or drive through flood water', 'Avoid contact with flood water (contamination)', 'Listen to emergency broadcasts for updates'],
+                safety: ['DO: Evacuate immediately if told to do so', 'DO: Turn off utilities before evacuating if time permits', 'DON\'T: Walk through moving water (6 inches can knock you down)', 'DON\'T: Drive through flooded roads (Turn Around, Don\'t Drown)']
+            },
+            Fire: {
+                overview: 'Fires can spread rapidly and produce toxic smoke and gases that are more dangerous than flames.',
+                causes: 'Electrical faults, cooking accidents, smoking, heating equipment, arson, natural causes like lightning',
+                warnings: 'Smoke detectors, smell of smoke, unusual heat, crackling sounds',
+                preparedness: ['Install smoke detectors on every floor and in bedrooms', 'Create and practice fire escape plan with two exits', 'Keep fire extinguisher accessible and know how to use it', 'Never overload electrical outlets'],
+                response: ['Alert others and evacuate immediately', 'Stay low to the ground to avoid smoke', 'Feel doors before opening (if hot, use alternate exit)', 'Call emergency services from safe location outside'],
+                safety: ['DO: Test smoke alarms monthly', 'DO: Have two ways out of every room', 'DON\'T: Go back inside for belongings', 'DON\'T: Use water on electrical or grease fires']
+            },
+            Cyclone: {
+                overview: 'Cyclones (hurricanes/typhoons) are rotating storm systems with strong winds and heavy rain.',
+                causes: 'Warm ocean water, atmospheric instability, low pressure systems',
+                warnings: 'Weather service warnings, satellite tracking, barometric pressure drops',
+                preparedness: ['Stock emergency supplies for several days', 'Secure or bring inside loose outdoor objects', 'Board up windows or use shutters', 'Know evacuation routes'],
+                response: ['Stay indoors in interior room away from windows', 'If evacuating, leave early before conditions worsen', 'Stay informed through battery radio', 'Beware of the eye - storm continues after calm'],
+                safety: ['DO: Stay away from windows and doors', 'DO: Wait for official all-clear before going outside', 'DON\'T: Go outside during the eye of the storm', 'DON\'T: Use candles for lighting (fire risk)']
+            },
+            Tsunami: {
+                overview: 'Tsunamis are series of ocean waves caused by underwater disturbances, reaching heights of 100+ feet.',
+                causes: 'Underwater earthquakes, volcanic eruptions, landslides, meteor impacts',
+                warnings: 'Earthquake felt at coast, ocean rapidly receding, roaring sound, official warnings',
+                preparedness: ['Know if you live in tsunami hazard zone', 'Learn evacuation routes to high ground', 'Practice evacuation drills', 'Prepare emergency kit'],
+                response: ['If you feel strong earthquake at coast, evacuate immediately', 'Move inland and to high ground (100+ feet elevation)', 'Stay away for several hours - multiple waves come', 'Do not go to beach to watch'],
+                safety: ['DO: Move quickly to higher ground', 'DO: Stay tuned to emergency information', 'DON\'T: Return until officials say it\'s safe', 'DON\'T: assume first wave is only wave']
+            }
+        };
+
+        // Firebase Database Manager
+        const FirebaseManager = {
+            // Save quiz results to Firestore
+            saveQuizResult: async (userId, quizData) => {
+                try {
+                    const quizResult = {
+                        userId: userId,
+                        disaster: quizData.disaster,
+                        score: quizData.score,
+                        total: quizData.total,
+                        percentage: quizData.percentage,
+                        date: new Date().toISOString(),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    const docRef = await db.collection('quiz_results').add(quizResult);
+                    console.log('Quiz result saved with ID:', docRef.id);
+                    return docRef.id;
+                } catch (error) {
+                    console.error('Error saving quiz result:', error);
+                    return null;
+                }
+            },
+
+            // Get user's quiz history
+            getUserQuizHistory: async (userId) => {
+                try {
+                    const snapshot = await db.collection('quiz_results')
+                        .where('userId', '==', userId)
+                        .orderBy('timestamp', 'desc')
+                        .limit(10)
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                } catch (error) {
+                    console.error('Error fetching quiz history:', error);
+                    return [];
+                }
+            },
+
+            // Save disaster alert to Firestore
+            saveDisasterAlert: async (alertData) => {
+                try {
+                    const alert = {
+                        ...alertData,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdAt: new Date().toISOString()
+                    };
+
+                    const docRef = await db.collection('disaster_alerts').add(alert);
+                    console.log('Disaster alert saved with ID:', docRef.id);
+                    return docRef.id;
+                } catch (error) {
+                    console.error('Error saving disaster alert:', error);
+                    return null;
+                }
+            },
+
+            // Get recent disaster alerts
+            getRecentAlerts: async (limit = 10) => {
+                try {
+                    const snapshot = await db.collection('disaster_alerts')
+                        .orderBy('timestamp', 'desc')
+                        .limit(limit)
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                } catch (error) {
+                    console.error('Error fetching alerts:', error);
+                    return [];
+                }
+            },
+
+            // Save user profile
+            saveUserProfile: async (userId, userData) => {
+                try {
+                    await db.collection('users').doc(userId).set({
+                        ...userData,
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                    console.log('User profile saved for:', userId);
+                    return true;
+                } catch (error) {
+                    console.error('Error saving user profile:', error);
+                    return false;
+                }
+            },
+
+            // Get user profile
+            getUserProfile: async (userId) => {
+                try {
+                    const doc = await db.collection('users').doc(userId).get();
+                    if (doc.exists) {
+                        return { id: doc.id, ...doc.data() };
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('Error fetching user profile:', error);
+                    return null;
+                }
+            },
+
+            // Save notification
+            saveNotification: async (userId, notification) => {
+                try {
+                    const notifData = {
+                        userId: userId,
+                        ...notification,
+                        read: false,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    const docRef = await db.collection('notifications').add(notifData);
+                    console.log('Notification saved with ID:', docRef.id);
+                    return docRef.id;
+                } catch (error) {
+                    console.error('Error saving notification:', error);
+                    return null;
+                }
+            },
+
+            // Get user notifications
+            getUserNotifications: async (userId) => {
+                try {
+                    const snapshot = await db.collection('notifications')
+                        .where('userId', '==', userId)
+                        .orderBy('timestamp', 'desc')
+                        .limit(20)
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                    return [];
+                }
+            },
+
+            // Mark notification as read
+            markNotificationAsRead: async (notificationId) => {
+                try {
+                    await db.collection('notifications').doc(notificationId).update({
+                        read: true,
+                        readAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    console.log('Notification marked as read:', notificationId);
+                    return true;
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                    return false;
+                }
+            },
+
+            // Save weather data
+            saveWeatherData: async (userId, weatherData, alerts) => {
+                try {
+                    const weatherDoc = {
+                        userId: userId,
+                        location: weatherData.name,
+                        temperature: weatherData.main.temp,
+                        humidity: weatherData.main.humidity,
+                        windSpeed: weatherData.wind.speed,
+                        pressure: weatherData.main.pressure,
+                        conditions: weatherData.weather[0].description,
+                        alerts: alerts,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    const docRef = await db.collection('weather_history').add(weatherDoc);
+                    console.log('Weather data saved with ID:', docRef.id);
+                    return docRef.id;
+                } catch (error) {
+                    console.error('Error saving weather data:', error);
+                    return null;
+                }
+            },
+
+            // Get user weather history
+            getUserWeatherHistory: async (userId, limit = 5) => {
+                try {
+                    const snapshot = await db.collection('weather_history')
+                        .where('userId', '==', userId)
+                        .orderBy('timestamp', 'desc')
+                        .limit(limit)
+                        .get();
+                    
+                    return snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                } catch (error) {
+                    console.error('Error fetching weather history:', error);
+                    return [];
+                }
+            }
+        };
+
+        // Helper Functions
+        const fisherYatesShuffle = (array) => {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        };
+
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        };
+
+        const getScoreClass = (score) => {
+            if (score >= 70) return 'score-high';
+            if (score >= 50) return 'score-medium';
+            return 'score-low';
+        };
+
+        // Particle Background Component
+        const ParticleBackground = () => {
+            useEffect(() => {
+                const createParticle = () => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.width = `${Math.random() * 100 + 50}px`;
+                    particle.style.height = particle.style.width;
+                    particle.style.left = `${Math.random() * 100}vw`;
+                    particle.style.animationDuration = `${Math.random() * 20 + 10}s`;
+                    particle.style.animationDelay = `${Math.random() * 5}s`;
+                    document.querySelector('.particles').appendChild(particle);
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                    }, 30000);
+                };
+
+                const interval = setInterval(createParticle, 500);
+                return () => clearInterval(interval);
+            }, []);
+
+            return <div className="particles"></div>;
+        };
+
+        // Notification Dropdown Component
+        const NotificationDropdown = ({ notifications, show, onClose, onClear, onNotificationClick }) => {
+            if (!show) return null;
+
+            return ReactDOM.createPortal(
+                <div className="notification-dropdown show">
+                    <div className="notification-header">
+                        <h4 style={{ margin: 0, color: '#4cc9f0' }}>
+                            <i className="fas fa-bell"></i> Notifications
+                        </h4>
+                        <button 
+                            className="clear-notifications" 
+                            onClick={onClear}
+                        >
+                            Clear All
+                        </button>
+                    </div>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        {notifications.length === 0 ? (
+                            <div style={{ 
+                                padding: '30px', 
+                                textAlign: 'center', 
+                                color: '#999' 
+                            }}>
+                                <i className="fas fa-check-circle" style={{ fontSize: '32px', marginBottom: '10px' }}></i>
+                                <p>No new notifications</p>
+                            </div>
+                        ) : (
+                            notifications.map((notification, index) => (
+                                <div 
+                                    key={index}
+                                    className={`notification-item ${notification.severity}`}
+                                    onClick={() => onNotificationClick(notification)}
+                                >
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'flex-start', 
+                                        gap: '10px' 
+                                    }}>
+                                        <span style={{ fontSize: '20px' }}>
+                                            {notification.icon}
+                                        </span>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ 
+                                                fontWeight: 'bold', 
+                                                color: '#ffffff',
+                                                marginBottom: '5px'
+                                            }}>
+                                                {notification.type}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: '12px', 
+                                                color: '#cccccc',
+                                                marginBottom: '5px'
+                                            }}>
+                                                {notification.message}
+                                            </div>
+                                            <div style={{ 
+                                                fontSize: '10px', 
+                                                color: '#999',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '5px'
+                                            }}>
+                                                <i className="far fa-clock"></i>
+                                                {new Date(notification.timestamp).toLocaleTimeString([], { 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                })}
+                                            </div>
+                                        </div>
+                                        <span style={{
+                                            fontSize: '10px',
+                                            fontWeight: 'bold',
+                                            padding: '2px 8px',
+                                            borderRadius: '10px',
+                                            background: notification.severity === 'CRITICAL' ? '#ff4757' :
+                                                       notification.severity === 'HIGH' ? '#ffa502' :
+                                                       notification.severity === 'MEDIUM' ? '#4cc9f0' : '#2ed573',
+                                            color: 'white'
+                                        }}>
+                                            {notification.severity}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>,
+                document.body
+            );
+        };
+
+        // Login Component
+        const Login = ({ onLogin }) => {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const [showRegister, setShowRegister] = useState(false);
+            const [name, setName] = useState('');
+            const [institution, setInstitution] = useState('');
+
+            const handleFirebaseLogin = async (e) => {
+                e.preventDefault();
+                setError('');
+                setIsLoading(true);
+
+                try {
+                    let userCredential;
+                    
+                    if (showRegister) {
+                        // Register new user
+                        userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
+                        
+                        // Save user profile to Firestore
+                        await FirebaseManager.saveUserProfile(user.uid, {
+                            email: email,
+                            name: name,
+                            institution: institution,
+                            role: 'student',
+                            createdAt: new Date().toISOString()
+                        });
+                        
+                        // Login with new user
+                        onLogin({
+                            id: user.uid,
+                            email: email,
+                            name: name,
+                            role: 'student',
+                            institution: institution
+                        });
+                        
+                    } else {
+                        // Login existing user
+                        userCredential = await auth.signInWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
+                        
+                        // Get user profile from Firestore
+                        const userProfile = await FirebaseManager.getUserProfile(user.uid);
+                        
+                        if (userProfile) {
+                            onLogin({
+                                id: user.uid,
+                                email: user.email,
+                                name: userProfile.name || user.email.split('@')[0],
+                                role: userProfile.role || 'student',
+                                institution: userProfile.institution || 'Not specified'
+                            });
+                        } else {
+                            // Create default profile if doesn't exist
+                            await FirebaseManager.saveUserProfile(user.uid, {
+                                email: user.email,
+                                name: user.email.split('@')[0],
+                                institution: 'Not specified',
+                                role: 'student'
+                            });
+                            
+                            onLogin({
+                                id: user.uid,
+                                email: user.email,
+                                name: user.email.split('@')[0],
+                                role: 'student',
+                                institution: 'Not specified'
+                            });
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Authentication error:', error);
+                    setError(getFirebaseErrorMessage(error.code));
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const getFirebaseErrorMessage = (code) => {
+                switch (code) {
+                    case 'auth/invalid-email':
+                        return 'Invalid email address.';
+                    case 'auth/user-disabled':
+                        return 'This account has been disabled.';
+                    case 'auth/user-not-found':
+                        return 'No account found with this email.';
+                    case 'auth/wrong-password':
+                        return 'Incorrect password.';
+                    case 'auth/email-already-in-use':
+                        return 'Email already in use.';
+                    case 'auth/weak-password':
+                        return 'Password should be at least 6 characters.';
+                    case 'auth/network-request-failed':
+                        return 'Network error. Please check your connection.';
+                    default:
+                        return 'Authentication failed. Please try again.';
+                }
+            };
+
+            return (
+                <div className="login-container">
+                    <ParticleBackground />
+                    <div className="login-box glow-effect">
+                        <h1 className="login-title neon-glow">
+                            <i className="fas fa-shield-alt"></i> Disaster Preparedness Platform
+                        </h1>
+                        <p className="login-subtitle">
+                            {showRegister ? 'Create your account' : 'Empowering students with life-saving knowledge'}
+                        </p>
+                        
+                        {error && (
+                            <div style={{
+                                background: 'rgba(255, 71, 87, 0.1)',
+                                border: '1px solid rgba(255, 71, 87, 0.3)',
+                                color: '#ff6b81',
+                                padding: '15px',
+                                borderRadius: '10px',
+                                marginBottom: '20px',
+                                textAlign: 'center'
+                            }}>
+                                <i className="fas fa-exclamation-circle"></i> {error}
+                            </div>
+                        )}
+                        
+                        <form onSubmit={handleFirebaseLogin}>
+                            {showRegister && (
+                                <>
+                                    <div className="form-group">
+                                        <label className="form-label">
+                                            <i className="fas fa-user"></i> Full Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Enter your full name"
+                                            required
+                                        />
+                                    </div>
+                                    
+                                    <div className="form-group">
+                                        <label className="form-label">
+                                            <i className="fas fa-school"></i> Institution
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={institution}
+                                            onChange={(e) => setInstitution(e.target.value)}
+                                            placeholder="School/Organization name"
+                                            required
+                                        />
+                                    </div>
+                                </>
+                            )}
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <i className="fas fa-envelope"></i> Email
+                                </label>
+                                <input
+                                    type="email"
+                                    className="form-input"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    required
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label className="form-label">
+                                    <i className="fas fa-lock"></i> Password
+                                </label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="Enter your password"
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                            
+                            <button type="submit" className="btn glow-effect" disabled={isLoading}>
+                                {isLoading ? (
+                                    <span className="loading-spinner"></span>
+                                ) : showRegister ? (
+                                    <>
+                                        <i className="fas fa-user-plus"></i> Register
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-sign-in-alt"></i> Login
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                        
+                        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                            <button 
+                                onClick={() => setShowRegister(!showRegister)}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#4cc9f0',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    textDecoration: 'underline'
+                                }}
+                            >
+                                {showRegister ? 'Already have an account? Login' : 'New user? Create account'}
+                            </button>
+                        </div>
+                        
+                        <div style={{
+                            marginTop: '30px',
+                            padding: '20px',
+                            background: 'rgba(15, 15, 30, 0.6)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(76, 201, 240, 0.2)'
+                        }}>
+                            <h4 style={{ 
+                                color: '#4cc9f0', 
+                                marginBottom: '15px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <i className="fas fa-info-circle"></i> Firebase Authentication
+                            </h4>
+                            <div style={{ 
+                                color: '#a0a0c0',
+                                fontSize: '14px'
+                            }}>
+                                <p>Your data is securely stored in Firebase Cloud Firestore.</p>
+                                <p>All quiz results and progress are saved to the cloud.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Weather Alert Component
+        const WeatherAlerts = ({ weatherData, disasterAlerts, loadingWeather, onRefresh }) => {
+            // Trigger notifications when alerts change
+            useEffect(() => {
+                if (disasterAlerts.length > 0 && 'Notification' in window) {
+                    disasterAlerts.forEach(alert => {
+                        if (alert.severity === 'CRITICAL' || alert.severity === 'HIGH') {
+                            NotificationManager.showDisasterAlert(alert);
+                        }
+                    });
+                }
+            }, [disasterAlerts]);
+
+            if (!weatherData) {
+                return (
+                    <div className="weather-section glow-effect">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <div>
+                                <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <i className="fas fa-globe-americas"></i> Local Disaster Risk Assessment
+                                </h2>
+                                <p style={{ opacity: 0.9, marginTop: '5px' }}>Real-time weather-based disaster prediction for your location</p>
+                            </div>
+                            <button className="btn-refresh glow-effect" onClick={onRefresh}
+                                style={{
+                                    padding: '10px 20px',
+                                    background: 'linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600'
+                                }}>
+                                {loadingWeather ? (
+                                    <span className="loading-spinner"></span>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-location-dot"></i> Check My Area
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                        <p style={{ opacity: 0.8, textAlign: 'center', padding: '40px 20px' }}>
+                            Click the button to analyze weather conditions and get disaster risk alerts for your area.
+                        </p>
+                    </div>
+                );
+            }
+
+            const weather = weatherData.current;
+            const location = weather.name;
+            const temp = weather.main.temp.toFixed(1);
+            const humidity = weather.main.humidity;
+            const windSpeed = weather.wind.speed.toFixed(1);
+            const pressure = weather.main.pressure;
+            const condition = weather.weather[0].description;
+
+            return (
+                <div className="weather-section glow-effect">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                        <div>
+                            <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <i className="fas fa-map-marker-alt"></i> {location} - Weather Analysis
+                            </h2>
+                            <p style={{ opacity: 0.9, marginTop: '5px', textTransform: 'capitalize' }}>
+                                <i className="fas fa-cloud"></i> {condition}
+                            </p>
+                        </div>
+                        <button className="btn-refresh glow-effect" onClick={onRefresh}
+                            style={{
+                                padding: '10px 20px',
+                                background: 'linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}>
+                            {loadingWeather ? (
+                                <span className="loading-spinner"></span>
+                            ) : (
+                                <>
+                                    <i className="fas fa-sync-alt"></i> Refresh
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+                        gap: '20px',
+                        marginBottom: '30px'
+                    }}>
+                        <div className="weather-card glow-effect">
+                            <h4 style={{ fontSize: '12px', opacity: 0.8, marginBottom: '5px' }}>
+                                <i className="fas fa-thermometer-half"></i> Temperature
+                            </h4>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold' }}>{temp}°C</div>
+                        </div>
+                        <div className="weather-card glow-effect">
+                            <h4 style={{ fontSize: '12px', opacity: 0.8, marginBottom: '5px' }}>
+                                <i className="fas fa-tint"></i> Humidity
+                            </h4>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold' }}>{humidity}%</div>
+                        </div>
+                        <div className="weather-card glow-effect">
+                            <h4 style={{ fontSize: '12px', opacity: 0.8, marginBottom: '5px' }}>
+                                <i className="fas fa-wind"></i> Wind Speed
+                            </h4>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold' }}>{windSpeed} m/s</div>
+                        </div>
+                        <div className="weather-card glow-effect">
+                            <h4 style={{ fontSize: '12px', opacity: 0.8, marginBottom: '5px' }}>
+                                <i className="fas fa-weight-hanging"></i> Pressure
+                            </h4>
+                            <div style={{ fontSize: '28px', fontWeight: 'bold' }}>{pressure} hPa</div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '20px' }}>
+                        {disasterAlerts.map((alert, index) => (
+                            <div key={index} className={`alert-card ${alert.severity} glow-effect`}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                                    <span style={{ fontSize: '32px' }}>{alert.icon}</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#ffffff' }}>
+                                            {alert.type}
+                                        </div>
+                                    </div>
+                                    <span className={`alert-badge ${alert.severity}`} style={{
+                                        display: 'inline-block',
+                                        padding: '4px 12px',
+                                        borderRadius: '12px',
+                                        fontSize: '11px',
+                                        fontWeight: 'bold',
+                                        background: alert.severity === 'CRITICAL' ? '#ff4757' :
+                                                   alert.severity === 'HIGH' ? '#ffa502' :
+                                                   alert.severity === 'MEDIUM' ? '#4cc9f0' : '#2ed573',
+                                        color: 'white'
+                                    }}>
+                                        {alert.severity}
+                                    </span>
+                                </div>
+                                <div style={{ color: '#cccccc', marginBottom: '15px', lineHeight: 1.6 }}>
+                                    {alert.message}
+                                </div>
+                                <div style={{ 
+                                    background: 'rgba(0,0,0,0.2)', 
+                                    padding: '15px',
+                                    borderRadius: '8px'
+                                }}>
+                                    <h5 style={{ 
+                                        marginBottom: '10px', 
+                                        color: '#ffffff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px'
+                                    }}>
+                                        <i className="fas fa-clipboard-list"></i> Safety Recommendations
+                                    </h5>
+                                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                                        {alert.recommendations.map((rec, idx) => (
+                                            <li key={idx} style={{ 
+                                                padding: '5px 0', 
+                                                paddingLeft: '20px', 
+                                                position: 'relative',
+                                                color: '#cccccc'
+                                            }}>
+                                                <i className="fas fa-chevron-right" style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    color: '#4cc9f0'
+                                                }}></i>
+                                                {rec}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // Dashboard Component
+        const Dashboard = ({ 
+            user, 
+            onLogout, 
+            onViewModule, 
+            onStartQuiz, 
+            weatherData,
+            disasterAlerts,
+            loadingWeather,
+            onRefreshWeather,
+            notifications,
+            onClearNotifications,
+            onNotificationClick,
+            showNotifications,
+            setShowNotifications,
+            unreadCount,
+            userHistory,
+            avgScore,
+            stats
+        }) => {
+            const handleNotificationPermission = async () => {
+                if ('Notification' in window) {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        NotificationManager.showAchievement(
+                            'Notifications Enabled',
+                            'You will now receive disaster alerts and reminders!'
+                        );
+                    }
+                } else {
+                    alert('Your browser does not support notifications.');
+                }
+            };
+
+            return (
+                <div className="container">
+                    <ParticleBackground />
+                    
+                    <NotificationDropdown
+                        notifications={notifications}
+                        show={showNotifications}
+                        onClose={() => setShowNotifications(false)}
+                        onClear={onClearNotifications}
+                        onNotificationClick={onNotificationClick}
+                    />
+                    
+                    <div className="header glow-effect">
+                        <h1 className="dashboard-title">
+                            <i className="fas fa-shield-alt shimmer-text"></i> Disaster Preparedness Hub
+                        </h1>
+                        <div className="user-info">
+                            <div className="user-badge glow-effect">
+                                <i className="fas fa-user"></i> {user.role.toUpperCase()} - {user.name}
+                                {unreadCount > 0 && (
+                                    <div className="notification-badge">
+                                        {unreadCount}
+                                    </div>
+                                )}
+                            </div>
+                            <button 
+                                className="btn-logout glow-effect" 
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                style={{ 
+                                    background: 'linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%)',
+                                    position: 'relative'
+                                }}
+                            >
+                                <i className="fas fa-bell"></i> Notifications
+                            </button>
+                            <button className="btn-logout glow-effect" onClick={onLogout}>
+                                <i className="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Notification Settings Section */}
+                    <div style={{
+                        background: 'rgba(26, 26, 46, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '20px',
+                        borderRadius: '20px',
+                        marginBottom: '30px',
+                        border: '1px solid rgba(76, 201, 240, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <div>
+                            <h3 style={{ color: '#4cc9f0', marginBottom: '5px' }}>
+                                <i className="fas fa-bell"></i> Notification Settings
+                            </h3>
+                            <p style={{ color: '#a0a0c0', fontSize: '14px' }}>
+                                Get real-time disaster alerts and quiz reminders
+                            </p>
+                        </div>
+                        <button 
+                            className="btn glow-effect" 
+                            onClick={handleNotificationPermission}
+                            style={{ padding: '12px 25px', fontSize: '14px' }}
+                        >
+                            <i className="fas fa-bell"></i> Enable Notifications
+                        </button>
+                    </div>
+
+                    <WeatherAlerts 
+                        weatherData={weatherData}
+                        disasterAlerts={disasterAlerts}
+                        loadingWeather={loadingWeather}
+                        onRefresh={onRefreshWeather}
+                    />
+
+                    <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                        gap: '25px',
+                        marginBottom: '30px'
+                    }}>
+                        <div className="stat-card glow-effect">
+                            <h3 style={{ color: '#b0b0d0', marginBottom: '10px', fontSize: '14px' }}>
+                                <i className="fas fa-chart-line"></i> Quizzes Completed
+                            </h3>
+                            <div className="stat-value">{stats.quizzesCompleted}</div>
+                            <div className="stat-label">Total Attempts</div>
+                        </div>
+                        <div className="stat-card glow-effect">
+                            <h3 style={{ color: '#b0b0d0', marginBottom: '10px', fontSize: '14px' }}>
+                                <i className="fas fa-star"></i> Average Score
+                            </h3>
+                            <div className="stat-value">{stats.avgScore}%</div>
+                            <div className="stat-label">Overall Performance</div>
+                        </div>
+                        <div className="stat-card glow-effect">
+                            <h3 style={{ color: '#b0b0d0', marginBottom: '10px', fontSize: '14px' }}>
+                                <i className="fas fa-book"></i> Modules Available
+                            </h3>
+                            <div className="stat-value">{DISASTER_TYPES.length}</div>
+                            <div className="stat-label">Learning Topics</div>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        background: 'rgba(26, 26, 46, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '30px',
+                        borderRadius: '20px',
+                        marginBottom: '30px',
+                        border: '1px solid rgba(76, 201, 240, 0.2)'
+                    }}>
+                        <h2 style={{ 
+                            color: '#4cc9f0', 
+                            marginBottom: '25px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px'
+                        }}>
+                            <i className="fas fa-graduation-cap shimmer-text"></i> Disaster Learning Modules
+                        </h2>
+                        <div style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                            gap: '20px'
+                        }}>
+                            {DISASTER_TYPES.map((disaster, index) => (
+                                <div 
+                                    key={index} 
+                                    className="disaster-card glow-effect"
+                                    onClick={() => onViewModule(disaster)}
+                                >
+                                    <h3>
+                                        <i className="fas fa-exclamation-triangle"></i> {disaster}
+                                    </h3>
+                                    <p>Learn about {disaster.toLowerCase()} preparedness and response</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div style={{
+                        background: 'rgba(26, 26, 46, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '30px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(76, 201, 240, 0.2)'
+                    }}>
+                        <h2 style={{ 
+                            color: '#4cc9f0', 
+                            marginBottom: '25px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px'
+                        }}>
+                            <i className="fas fa-history shimmer-text"></i> Quiz History (Firebase)
+                        </h2>
+                        {userHistory.length > 0 ? (
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ 
+                                    width: '100%', 
+                                    borderCollapse: 'collapse',
+                                    marginTop: '20px'
+                                }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ 
+                                                background: '#0f0f1e', 
+                                                padding: '12px', 
+                                                textAlign: 'left',
+                                                color: '#b0b0d0'
+                                            }}>Disaster Type</th>
+                                            <th style={{ 
+                                                background: '#0f0f1e', 
+                                                padding: '12px', 
+                                                textAlign: 'left',
+                                                color: '#b0b0d0'
+                                            }}>Score</th>
+                                            <th style={{ 
+                                                background: '#0f0f1e', 
+                                                padding: '12px', 
+                                                textAlign: 'left',
+                                                color: '#b0b0d0'
+                                            }}>Percentage</th>
+                                            <th style={{ 
+                                                background: '#0f0f1e', 
+                                                padding: '12px', 
+                                                textAlign: 'left',
+                                                color: '#b0b0d0'
+                                            }}>Date</th>
+                                            <th style={{ 
+                                                background: '#0f0f1e', 
+                                                padding: '12px', 
+                                                textAlign: 'left',
+                                                color: '#b0b0d0'
+                                            }}>Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {userHistory.map((quiz, index) => (
+                                            <tr key={index} style={{ 
+                                                transition: 'all 0.3s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(67, 97, 238, 0.1)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                                                <td style={{ padding: '12px', color: '#e0e0e0' }}>
+                                                    <strong>{quiz.disaster}</strong>
+                                                </td>
+                                                <td style={{ padding: '12px', color: '#e0e0e0' }}>
+                                                    {quiz.score}/{quiz.total}
+                                                </td>
+                                                <td style={{ padding: '12px', color: '#e0e0e0' }}>
+                                                    {quiz.percentage}%
+                                                </td>
+                                                <td style={{ padding: '12px', color: '#e0e0e0' }}>
+                                                    {new Date(quiz.date).toLocaleDateString()}
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <span style={{
+                                                        display: 'inline-block',
+                                                        padding: '5px 10px',
+                                                        borderRadius: '20px',
+                                                        fontWeight: '600',
+                                                        fontSize: '12px',
+                                                        background: quiz.percentage >= 70 ? '#4caf50' : 
+                                                                 quiz.percentage >= 50 ? '#ff9800' : '#f44336',
+                                                        color: 'white'
+                                                    }}>
+                                                        {quiz.percentage >= 70 ? 'Pass' : 'Need Practice'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <p style={{ 
+                                color: '#999', 
+                                textAlign: 'center', 
+                                padding: '40px',
+                                fontSize: '18px'
+                            }}>
+                                <i className="fas fa-clipboard-question"></i> No quiz attempts yet. Start learning!
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Firebase Status */}
+                    <div style={{
+                        background: 'rgba(26, 26, 46, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '20px',
+                        borderRadius: '20px',
+                        marginTop: '30px',
+                        border: '1px solid rgba(76, 201, 240, 0.2)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <i className="fas fa-database" style={{ color: '#4cc9f0', fontSize: '24px' }}></i>
+                            <div>
+                                <h4 style={{ color: '#4cc9f0', margin: 0 }}>Firebase Connected</h4>
+                                <p style={{ color: '#a0a0c0', fontSize: '12px', margin: 0 }}>
+                                    Your data is securely stored in the cloud
+                                </p>
+                            </div>
+                        </div>
+                        <div style={{ 
+                            padding: '8px 16px',
+                            background: 'rgba(76, 201, 240, 0.1)',
+                            borderRadius: '20px',
+                            color: '#4cc9f0',
+                            fontSize: '12px'
+                        }}>
+                            <i className="fas fa-cloud"></i> Cloud Sync Active
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Module Component
+        const DisasterModule = ({ disaster, onBack, onStartQuiz }) => {
+            const module = DISASTER_MODULES[disaster];
+
+            return (
+                <div className="container">
+                    <ParticleBackground />
+                    
+                    <div className="header glow-effect">
+                        <h1 style={{ 
+                            color: '#4cc9f0', 
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px'
+                        }}>
+                            <i className="fas fa-book-open shimmer-text"></i> {disaster} Preparedness
+                        </h1>
+                        <button className="btn-logout glow-effect" onClick={onBack}>
+                            <i className="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+
+                    <div style={{
+                        background: 'rgba(26, 26, 46, 0.9)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '40px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(76, 201, 240, 0.2)'
+                    }}>
+                        <div style={{ lineHeight: 1.8 }}>
+                            <div className="module-section glow-effect">
+                                <h3 style={{ 
+                                    color: '#4cc9f0', 
+                                    marginBottom: '20px',
+                                    fontSize: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <i className="fas fa-info-circle"></i> Overview
+                                </h3>
+                                <p style={{ color: '#cccccc', fontSize: '16px' }}>{module.overview}</p>
+                            </div>
+
+                            <div className="module-section glow-effect">
+                                <h3 style={{ 
+                                    color: '#4cc9f0', 
+                                    marginBottom: '20px',
+                                    fontSize: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <i className="fas fa-search"></i> Causes
+                                </h3>
+                                <p style={{ color: '#cccccc', fontSize: '16px' }}>{module.causes}</p>
+                            </div>
+
+                            <div className="module-section glow-effect">
+                                <h3 style={{ 
+                                    color: '#4cc9f0', 
+                                    marginBottom: '20px',
+                                    fontSize: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <i className="fas fa-exclamation-triangle"></i> Warning Signs
+                                </h3>
+                                <p style={{ color: '#cccccc', fontSize: '16px' }}>{module.warnings}</p>
+                            </div>
+
+                            <div className="module-section glow-effect">
+                                <h3 style={{ 
+                                    color: '#4cc9f0', 
+                                    marginBottom: '20px',
+                                    fontSize: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <i className="fas fa-tools"></i> Preparedness Steps
+                                </h3>
+                                <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+                                    {module.preparedness.map((item, index) => (
+                                        <li key={index} style={{ 
+                                            padding: '15px 0', 
+                                            paddingLeft: '35px', 
+                                            position: 'relative',
+                                            color: '#cccccc',
+                                            fontSize: '16px'
+                                        }}>
+                                            <i className="fas fa-check" style={{
+                                                position: 'absolute',
+                                                left: 0,
+                                                color: '#4cc9f0',
+                                                fontSize: '18px'
+                                            }}></i>
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div className="module-section glow-effect">
+                                <h3 style={{ 
+                                    color: '#4cc9f0', 
+                                    marginBottom: '20px',
+                                    fontSize: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <i className="fas fa-first-aid"></i> Emergency Response
+                                </h3>
+                                <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+                                    {module.response.map((item, index) => (
+                                        <li key={index} style={{ 
+                                            padding: '15px 0', 
+                                            paddingLeft: '35px', 
+                                            position: 'relative',
+                                            color: '#cccccc',
+                                            fontSize: '16px'
+                                        }}>
+                                            <i className="fas fa-chevron-right" style={{
+                                                position: 'absolute',
+                                                left: 0,
+                                                color: '#4cc9f0',
+                                                fontSize: '18px'
+                                            }}></i>
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <div className="module-section glow-effect">
+                                <h3 style={{ 
+                                    color: '#4cc9f0', 
+                                    marginBottom: '20px',
+                                    fontSize: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <i className="fas fa-shield-alt"></i> Safety Do's and Don'ts
+                                </h3>
+                                <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
+                                    {module.safety.map((item, index) => (
+                                        <li key={index} style={{ 
+                                            padding: '15px 0', 
+                                            paddingLeft: '35px', 
+                                            position: 'relative',
+                                            color: '#cccccc',
+                                            fontSize: '16px'
+                                        }}>
+                                            <i className={`fas ${item.startsWith('DO:') ? 'fa-check-circle' : 'fa-times-circle'}`} style={{
+                                                position: 'absolute',
+                                                left: 0,
+                                                color: item.startsWith('DO:') ? '#4caf50' : '#f44336',
+                                                fontSize: '18px'
+                                            }}></i>
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '20px', 
+                            marginTop: '30px',
+                            flexWrap: 'wrap'
+                        }}>
+                            <button 
+                                className="btn-secondary glow-effect" 
+                                onClick={() => onStartQuiz(disaster)}
+                                style={{
+                                    padding: '15px 30px',
+                                    background: 'linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '16px'
+                                }}
+                            >
+                                <i className="fas fa-play-circle"></i> Take Quiz on {disaster}
+                            </button>
+                            <button 
+                                className="btn-secondary glow-effect" 
+                                onClick={onBack}
+                                style={{
+                                    padding: '15px 30px',
+                                    background: 'rgba(67, 97, 238, 0.2)',
+                                    color: '#b0b0d0',
+                                    border: '1px solid rgba(76, 201, 240, 0.3)',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '16px'
+                                }}
+                            >
+                                <i className="fas fa-arrow-left"></i> Back to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Quiz Component
+        const Quiz = ({ 
+            disaster, 
+            questions, 
+            selectedAnswers, 
+            currentQuestion, 
+            timeRemaining,
+            onAnswerSelect,
+            onNext,
+            onPrev,
+            onSubmit,
+            onBack,
+            quizComplete,
+            quizScore,
+            userId
+        }) => {
+            if (quizComplete) {
+                const score = quizScore.score;
+                const total = quizScore.total;
+                const percentage = quizScore.percentage;
+                const passed = percentage >= 70;
+
+                // Save quiz result to Firebase
+                useEffect(() => {
+                    const saveQuizResult = async () => {
+                        const quizData = {
+                            disaster: disaster,
+                            score: score,
+                            total: total,
+                            percentage: percentage,
+                            passed: passed,
+                            date: new Date().toISOString()
+                        };
+                        
+                        await FirebaseManager.saveQuizResult(userId, quizData);
+                        
+                        // Show achievement notification
+                        if (passed && 'Notification' in window && Notification.permission === 'granted') {
+                            NotificationManager.showAchievement(
+                                'Quiz Completed!',
+                                `You scored ${percentage}% on the ${disaster} quiz!`
+                            );
+                        }
+                    };
+                    
+                    saveQuizResult();
+                }, [passed, percentage, disaster, score, total, userId]);
+
+                return (
+                    <div className="container">
+                        <ParticleBackground />
+                        
+                        <div className="quiz-container glow-effect">
+                            <div style={{ textAlign: 'center', padding: '40px' }}>
+                                <h2 style={{ 
+                                    color: '#4cc9f0',
+                                    fontSize: '32px',
+                                    marginBottom: '20px'
+                                }}>
+                                    <i className="fas fa-trophy"></i> Quiz Complete!
+                                </h2>
+                                
+                                <div style={{ 
+                                    fontSize: '72px', 
+                                    fontWeight: 'bold',
+                                    background: passed ? 
+                                        'linear-gradient(135deg, #4caf50, #2ecc71)' : 
+                                        'linear-gradient(135deg, #ff9800, #ff5722)',
+                                    WebkitBackgroundClip: 'text',
+                                    backgroundClip: 'text',
+                                    color: 'transparent',
+                                    margin: '20px 0'
+                                }}>
+                                    {percentage}%
+                                </div>
+                                
+                                <div style={{ 
+                                    fontSize: '24px', 
+                                    color: '#ffffff',
+                                    marginBottom: '30px'
+                                }}>
+                                    You scored {score} out of {total}
+                                    <br />
+                                    <span style={{ 
+                                        color: passed ? '#4caf50' : '#ff9800', 
+                                        fontWeight: 'bold',
+                                        fontSize: '28px'
+                                    }}>
+                                        {passed ? '✓ PASSED' : '✗ NEEDS IMPROVEMENT'}
+                                    </span>
+                                </div>
+
+                                <div style={{ 
+                                    background: 'rgba(76, 201, 240, 0.1)',
+                                    padding: '15px',
+                                    borderRadius: '10px',
+                                    marginBottom: '20px',
+                                    color: '#4cc9f0'
+                                }}>
+                                    <i className="fas fa-cloud-upload-alt"></i> Result saved to Firebase database
+                                </div>
+
+                                <div style={{ textAlign: 'left', marginTop: '30px' }}>
+                                    <h3 style={{ 
+                                        marginBottom: '20px', 
+                                        color: '#4cc9f0',
+                                        fontSize: '22px'
+                                    }}>
+                                        <i className="fas fa-list-check"></i> Answer Review
+                                    </h3>
+                                    {questions.map((q, index) => {
+                                        const userAnswer = selectedAnswers[index];
+                                        const isCorrect = userAnswer === q.options[q.correct];
+                                        
+                                        return (
+                                            <div key={index} style={{ 
+                                                padding: '20px',
+                                                marginBottom: '15px',
+                                                borderRadius: '12px',
+                                                borderLeft: '6px solid',
+                                                borderColor: isCorrect ? '#4caf50' : '#f44336',
+                                                background: isCorrect ? 
+                                                    'rgba(76, 175, 80, 0.1)' : 
+                                                    'rgba(244, 67, 54, 0.1)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)'
+                                            }}>
+                                                <strong style={{ color: '#ffffff', fontSize: '16px' }}>
+                                                    Q{index + 1}: {q.question}
+                                                </strong>
+                                                <p style={{ marginTop: '10px', fontSize: '14px' }}>
+                                                    Your Answer: <strong>{userAnswer || 'Not answered'}</strong>
+                                                    {!isCorrect && (
+                                                        <>
+                                                            <br />
+                                                            Correct Answer: <strong style={{ color: '#4caf50' }}>
+                                                                {q.options[q.correct]}
+                                                            </strong>
+                                                        </>
+                                                    )}
+                                                    {isCorrect && (
+                                                        <span style={{ color: '#4caf50', marginLeft: '10px' }}>
+                                                            ✓ Correct
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div style={{ 
+                                    display: 'flex', 
+                                    gap: '20px', 
+                                    marginTop: '40px',
+                                    justifyContent: 'center',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    <button 
+                                        className="btn glow-effect" 
+                                        onClick={onBack}
+                                        style={{
+                                            padding: '15px 40px',
+                                            fontSize: '16px'
+                                        }}
+                                    >
+                                        <i className="fas fa-home"></i> Back to Dashboard
+                                    </button>
+                                    <button 
+                                        className="btn-secondary glow-effect" 
+                                        onClick={() => window.location.reload()}
+                                        style={{
+                                            padding: '15px 40px',
+                                            background: 'rgba(67, 97, 238, 0.2)',
+                                            color: '#b0b0d0',
+                                            border: '1px solid rgba(76, 201, 240, 0.3)',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            fontSize: '16px'
+                                        }}
+                                    >
+                                        <i className="fas fa-redo"></i> Retake Quiz
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            const question = questions[currentQuestion];
+            const selectedAnswer = selectedAnswers[currentQuestion];
+
+            return (
+                <div className="container">
+                    <ParticleBackground />
+                    
+                    <div className="quiz-container glow-effect">
+                        <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            marginBottom: '30px',
+                            paddingBottom: '20px',
+                            borderBottom: '2px solid rgba(45, 45, 77, 0.5)'
+                        }}>
+                            <div style={{ 
+                                fontSize: '20px', 
+                                color: '#4cc9f0', 
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <i className="fas fa-question-circle shimmer-text"></i>
+                                Question {currentQuestion + 1} of {questions.length}
+                            </div>
+                            <div style={{ 
+                                background: '#ff4757', 
+                                color: 'white', 
+                                padding: '12px 25px',
+                                borderRadius: '25px',
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <i className="fas fa-clock"></i> {formatTime(timeRemaining)}
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: '30px' }}>
+                            <div style={{ 
+                                fontSize: '22px', 
+                                color: '#ffffff', 
+                                marginBottom: '25px',
+                                fontWeight: '500',
+                                lineHeight: 1.6
+                            }}>
+                                {question.question}
+                            </div>
+                            
+                            <div style={{ display: 'grid', gap: '15px' }}>
+                                {question.shuffledOptions.map((option, index) => {
+                                    const isSelected = selectedAnswer === option;
+                                    const letter = String.fromCharCode(65 + index);
+                                    
+                                    return (
+                                        <div 
+                                            key={index}
+                                            className={`option ${isSelected ? 'selected' : ''} glow-effect`}
+                                            onClick={() => onAnswerSelect(currentQuestion, option)}
+                                        >
+                                            <span style={{ 
+                                                fontWeight: 'bold', 
+                                                marginRight: '15px',
+                                                color: isSelected ? '#ffffff' : '#4cc9f0'
+                                            }}>
+                                                {letter}.
+                                            </span>
+                                            {option}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            marginTop: '30px'
+                        }}>
+                            <button 
+                                className="btn-secondary glow-effect" 
+                                onClick={onPrev}
+                                disabled={currentQuestion === 0}
+                                style={{
+                                    padding: '12px 30px',
+                                    background: currentQuestion === 0 ? 
+                                        'rgba(67, 97, 238, 0.1)' : 
+                                        'linear-gradient(135deg, rgba(67, 97, 238, 0.3) 0%, rgba(58, 12, 163, 0.3) 100%)',
+                                    color: currentQuestion === 0 ? '#666' : '#ffffff',
+                                    border: '1px solid rgba(76, 201, 240, 0.3)',
+                                    borderRadius: '12px',
+                                    cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+                                    fontWeight: '600',
+                                    opacity: currentQuestion === 0 ? 0.5 : 1
+                                }}
+                            >
+                                <i className="fas fa-arrow-left"></i> Previous
+                            </button>
+                            
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                {currentQuestion < questions.length - 1 ? (
+                                    <button 
+                                        className="btn-secondary glow-effect" 
+                                        onClick={onNext}
+                                        style={{
+                                            padding: '12px 30px',
+                                            background: 'linear-gradient(135deg, rgba(67, 97, 238, 0.3) 0%, rgba(58, 12, 163, 0.3) 100%)',
+                                            color: '#ffffff',
+                                            border: '1px solid rgba(76, 201, 240, 0.3)',
+                                            borderRadius: '12px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        Next <i className="fas fa-arrow-right"></i>
+                                    </button>
+                                ) : (
+                                    <button 
+                                        className="btn glow-effect" 
+                                        onClick={onSubmit}
+                                        style={{
+                                            padding: '12px 40px'
+                                        }}
+                                    >
+                                        <i className="fas fa-paper-plane"></i> Submit Quiz
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        <div style={{ 
+                            marginTop: '20px', 
+                            textAlign: 'center',
+                            color: '#999'
+                        }}>
+                            <p>
+                                <i className="fas fa-check-circle"></i> Answered: {
+                                    selectedAnswers.filter(a => a !== null).length
+                                } / {questions.length}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [currentView, setCurrentView] = useState('login');
+            const [selectedDisaster, setSelectedDisaster] = useState(null);
+            const [quizQuestions, setQuizQuestions] = useState([]);
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [selectedAnswers, setSelectedAnswers] = useState([]);
+            const [quizComplete, setQuizComplete] = useState(false);
+            const [quizScore, setQuizScore] = useState(null);
+            const [timeRemaining, setTimeRemaining] = useState(300);
+            const [weatherData, setWeatherData] = useState(null);
+            const [disasterAlerts, setDisasterAlerts] = useState([]);
+            const [loadingWeather, setLoadingWeather] = useState(false);
+            const [notifications, setNotifications] = useState([]);
+            const [showNotifications, setShowNotifications] = useState(false);
+            const [notificationPermission, setNotificationPermission] = useState('default');
+            const [userHistory, setUserHistory] = useState([]);
+            const [userStats, setUserStats] = useState({
+                quizzesCompleted: 0,
+                avgScore: 0
+            });
+
+            const handleLogin = async (user) => {
+                setCurrentUser(user);
+                setCurrentView('dashboard');
+                
+                // Load user data from Firebase
+                await loadUserData(user.id);
+                
+                // Request notification permission
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission().then(permission => {
+                        setNotificationPermission(permission);
+                        if (permission === 'granted') {
+                            NotificationManager.showAchievement(
+                                'Welcome!',
+                                'You will receive disaster alerts and quiz reminders.'
+                            );
+                        }
+                    });
+                }
+            };
+
+            const loadUserData = async (userId) => {
+                try {
+                    // Load quiz history
+                    const history = await FirebaseManager.getUserQuizHistory(userId);
+                    setUserHistory(history);
+                    
+                    // Calculate stats
+                    const quizzesCompleted = history.length;
+                    const avgScore = history.length > 0 
+                        ? Math.round(history.reduce((sum, q) => sum + q.percentage, 0) / history.length)
+                        : 0;
+                    
+                    setUserStats({
+                        quizzesCompleted,
+                        avgScore
+                    });
+                    
+                    // Load notifications
+                    const userNotifications = await FirebaseManager.getUserNotifications(userId);
+                    setNotifications(userNotifications);
+                    
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                }
+            };
+
+            const handleLogout = async () => {
+                try {
+                    await auth.signOut();
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+                
+                setCurrentUser(null);
+                setCurrentView('login');
+                setSelectedDisaster(null);
+                setQuizQuestions([]);
+                setQuizComplete(false);
+                setNotifications([]);
+                setUserHistory([]);
+                setUserStats({ quizzesCompleted: 0, avgScore: 0 });
+            };
+
+            const handleViewModule = (disaster) => {
+                setSelectedDisaster(disaster);
+                setCurrentView('module');
+            };
+
+            const handleBackToDashboard = () => {
+                setCurrentView('dashboard');
+                setSelectedDisaster(null);
+                setQuizQuestions([]);
+                setQuizComplete(false);
+                setQuizScore(null);
+            };
+
+            const handleStartQuiz = (disaster) => {
+                const questions = QUESTION_BANK[disaster] || [];
+                const shuffledQuestions = fisherYatesShuffle(questions).slice(0, Math.min(10, questions.length));
+                
+                const questionsWithShuffledOptions = shuffledQuestions.map(q => {
+                    const shuffledOpts = fisherYatesShuffle(q.options);
+                    return {
+                        ...q,
+                        shuffledOptions: shuffledOpts
+                    };
+                });
+                
+                setQuizQuestions(fisherYatesShuffle(questionsWithShuffledOptions));
+                setSelectedAnswers(new Array(questionsWithShuffledOptions.length).fill(null));
+                setCurrentQuestion(0);
+                setQuizComplete(false);
+                setTimeRemaining(300);
+                setSelectedDisaster(disaster);
+                setCurrentView('quiz');
+            };
+
+            const handleAnswerSelect = (questionIndex, answer) => {
+                const newAnswers = [...selectedAnswers];
+                newAnswers[questionIndex] = answer;
+                setSelectedAnswers(newAnswers);
+            };
+
+            const handleQuizSubmit = () => {
+                let score = 0;
+                quizQuestions.forEach((q, index) => {
+                    if (selectedAnswers[index] === q.options[q.correct]) {
+                        score++;
+                    }
+                });
+                
+                const percentage = Math.round((score / quizQuestions.length) * 100);
+                setQuizScore({
+                    score,
+                    total: quizQuestions.length,
+                    percentage
+                });
+                setQuizComplete(true);
+            };
+
+            const handleRefreshWeather = async () => {
+                setLoadingWeather(true);
+                
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        if (!navigator.geolocation) {
+                            reject(new Error('Geolocation not supported'));
+                        }
+                        navigator.geolocation.getCurrentPosition(resolve, reject);
+                    });
+
+                    const { latitude, longitude } = position.coords;
+                    
+                    const weatherResponse = await fetch(
+                        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${WEATHER_API_KEY}&units=metric`
+                    );
+                    
+                    const weatherData = await weatherResponse.json();
+                    
+                    // Analyze disaster risk
+                    const alerts = analyzeDisasterRisk(weatherData);
+                    setDisasterAlerts(alerts);
+                    setWeatherData({ current: weatherData });
+                    
+                    // Save weather data to Firebase
+                    if (currentUser) {
+                        await FirebaseManager.saveWeatherData(currentUser.id, weatherData, alerts);
+                    }
+                    
+                    // Add to notifications
+                    alerts.forEach(alert => {
+                        addNotification(alert);
+                    });
+                    
+                } catch (error) {
+                    console.error('Error fetching weather:', error);
+                    alert('Could not fetch weather data. Please enable location.');
+                } finally {
+                    setLoadingWeather(false);
+                }
+            };
+
+            const analyzeDisasterRisk = (currentWeather) => {
+                const alerts = [];
+                const temp = currentWeather.main.temp;
+                const humidity = currentWeather.main.humidity;
+                const windSpeed = currentWeather.wind.speed;
+                const pressure = currentWeather.main.pressure;
+                const rain = currentWeather.rain ? currentWeather.rain['1h'] || 0 : 0;
+
+                // Flood Risk
+                if (rain >= DISASTER_THRESHOLDS.flood.rainfall || humidity >= DISASTER_THRESHOLDS.flood.humidity) {
+                    const severity = rain >= 100 ? 'CRITICAL' : 'HIGH';
+                    alerts.push({
+                        type: 'Flood Warning',
+                        severity: severity,
+                        message: `Heavy rainfall detected (${rain.toFixed(1)}mm). Flood risk ${severity === 'CRITICAL' ? 'critical' : 'high'}.`,
+                        icon: '🌊',
+                        recommendations: [
+                            'Move to higher ground if in flood-prone area',
+                            'Avoid walking or driving through flood waters',
+                            'Prepare emergency evacuation bag',
+                            'Monitor local weather updates'
+                        ],
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                // Cyclone/Storm Risk
+                if (windSpeed >= DISASTER_THRESHOLDS.cyclone.windSpeed) {
+                    const severity = windSpeed >= 89 ? 'CRITICAL' : 'HIGH';
+                    alerts.push({
+                        type: severity === 'CRITICAL' ? 'Cyclone Warning' : 'Storm Alert',
+                        severity: severity,
+                        message: `High winds detected (${windSpeed.toFixed(1)} m/s). ${severity === 'CRITICAL' ? 'Cyclone conditions possible.' : 'Storm conditions.'}`,
+                        icon: '🌀',
+                        recommendations: [
+                            'Secure outdoor furniture and objects',
+                            'Stay indoors away from windows',
+                            'Prepare emergency kit with supplies for 3 days',
+                            'Charge mobile devices and power banks'
+                        ],
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                // Heatwave Risk
+                if (temp >= DISASTER_THRESHOLDS.heatwave.temperature) {
+                    const severity = temp >= 45 ? 'CRITICAL' : 'HIGH';
+                    alerts.push({
+                        type: 'Heatwave Alert',
+                        severity: severity,
+                        message: `Extreme heat detected (${temp.toFixed(1)}°C). ${severity === 'CRITICAL' ? 'Dangerous heat levels!' : 'High heat conditions.'}`,
+                        icon: '🌡️',
+                        recommendations: [
+                            'Stay indoors during peak heat hours (11 AM - 4 PM)',
+                            'Drink plenty of water every 15-20 minutes',
+                            'Wear light-colored, loose-fitting clothing',
+                            'Check on elderly neighbors and relatives'
+                        ],
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                // Heavy Rain Risk
+                if (rain >= DISASTER_THRESHOLDS.heavyRain.rainfall && rain < DISASTER_THRESHOLDS.flood.rainfall) {
+                    alerts.push({
+                        type: 'Heavy Rain Alert',
+                        severity: 'MEDIUM',
+                        message: `Heavy rainfall (${rain.toFixed(1)}mm). Exercise caution outdoors.`,
+                        icon: '🌧️',
+                        recommendations: [
+                            'Avoid unnecessary travel',
+                            'Use headlights while driving',
+                            'Watch for slippery surfaces',
+                            'Keep drains clear of debris'
+                        ],
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                if (alerts.length === 0) {
+                    alerts.push({
+                        type: 'All Clear',
+                        severity: 'LOW',
+                        message: 'No immediate disaster threats detected. Conditions are normal.',
+                        icon: '✅',
+                        recommendations: [
+                            'Stay prepared with your emergency kit',
+                            'Review your family emergency plan',
+                            'Keep informed about weather updates',
+                            'Practice emergency drills regularly'
+                        ],
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                return alerts;
+            };
+
+            const addNotification = async (alert) => {
+                const newNotification = {
+                    ...alert,
+                    id: Date.now(),
+                    read: false
+                };
+                setNotifications(prev => [newNotification, ...prev]);
+                
+                // Save to Firebase if user is logged in
+                if (currentUser) {
+                    await FirebaseManager.saveNotification(currentUser.id, newNotification);
+                }
+            };
+
+            const clearNotifications = async () => {
+                setNotifications([]);
+                // In a real app, you would mark all as read in Firebase
+            };
+
+            const handleNotificationClick = async (notification) => {
+                // Mark as read locally
+                setNotifications(prev => 
+                    prev.map(n => 
+                        n.id === notification.id ? { ...n, read: true } : n
+                    )
+                );
+                
+                // Mark as read in Firebase
+                if (notification.id && typeof notification.id === 'string') {
+                    await FirebaseManager.markNotificationAsRead(notification.id);
+                }
+                
+                // Show alert sound for critical notifications
+                if (notification.severity === 'CRITICAL') {
+                    playAlertSound();
+                }
+                setShowNotifications(false);
+            };
+
+            const unreadCount = notifications.filter(n => !n.read).length;
+
+            // Firebase auth state listener
+            useEffect(() => {
+                const unsubscribe = auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        // User is signed in
+                        const userProfile = await FirebaseManager.getUserProfile(user.uid);
+                        
+                        if (userProfile) {
+                            setCurrentUser({
+                                id: user.uid,
+                                email: user.email,
+                                name: userProfile.name || user.email.split('@')[0],
+                                role: userProfile.role || 'student',
+                                institution: userProfile.institution || 'Not specified'
+                            });
+                            setCurrentView('dashboard');
+                            await loadUserData(user.uid);
+                        }
+                    }
+                });
+                
+                return () => unsubscribe();
+            }, []);
+
+            useEffect(() => {
+                let interval;
+                if (currentView === 'quiz' && !quizComplete && timeRemaining > 0) {
+                    interval = setInterval(() => {
+                        setTimeRemaining(prev => {
+                            if (prev <= 1) {
+                                handleQuizSubmit();
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [currentView, quizComplete]);
+
+            // Periodic reminder notifications
+            useEffect(() => {
+                if (currentUser && currentView === 'dashboard' && notificationPermission === 'granted') {
+                    const reminderInterval = setInterval(() => {
+                        const disasters = ['Earthquake', 'Fire', 'Flood', 'Cyclone'];
+                        const randomDisaster = disasters[Math.floor(Math.random() * disasters.length)];
+                        const reminder = {
+                            type: 'Quiz Reminder',
+                            severity: 'LOW',
+                            message: `Time to test your ${randomDisaster} knowledge!`,
+                            icon: '📚',
+                            recommendations: ['Take the quiz to reinforce your learning'],
+                            timestamp: new Date().toISOString()
+                        };
+                        addNotification(reminder);
+                        NotificationManager.showQuizReminder(randomDisaster);
+                    }, 1800000); // Every 30 minutes
+
+                    return () => clearInterval(reminderInterval);
+                }
+            }, [currentUser, currentView, notificationPermission]);
+
+            return (
+                <>
+                    {currentView === 'login' ? (
+                        <Login onLogin={handleLogin} />
+                    ) : currentView === 'dashboard' ? (
+                        <Dashboard 
+                            user={currentUser}
+                            onLogout={handleLogout}
+                            onViewModule={handleViewModule}
+                            onStartQuiz={handleStartQuiz}
+                            weatherData={weatherData}
+                            disasterAlerts={disasterAlerts}
+                            loadingWeather={loadingWeather}
+                            onRefreshWeather={handleRefreshWeather}
+                            notifications={notifications}
+                            onClearNotifications={clearNotifications}
+                            onNotificationClick={handleNotificationClick}
+                            showNotifications={showNotifications}
+                            setShowNotifications={setShowNotifications}
+                            unreadCount={unreadCount}
+                            userHistory={userHistory}
+                            avgScore={userStats.avgScore}
+                            stats={userStats}
+                        />
+                    ) : currentView === 'module' ? (
+                        <DisasterModule 
+                            disaster={selectedDisaster}
+                            onBack={handleBackToDashboard}
+                            onStartQuiz={handleStartQuiz}
+                        />
+                    ) : currentView === 'quiz' ? (
+                        <Quiz 
+                            disaster={selectedDisaster}
+                            questions={quizQuestions}
+                            selectedAnswers={selectedAnswers}
+                            currentQuestion={currentQuestion}
+                            timeRemaining={timeRemaining}
+                            onAnswerSelect={handleAnswerSelect}
+                            onNext={() => setCurrentQuestion(prev => prev + 1)}
+                            onPrev={() => setCurrentQuestion(prev => prev - 1)}
+                            onSubmit={handleQuizSubmit}
+                            onBack={handleBackToDashboard}
+                            quizComplete={quizComplete}
+                            quizScore={quizScore}
+                            userId={currentUser?.id}
+                        />
+                    ) : null}
+                </>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registered');
+                });
+            });
+        }
+    </script>
+</body>
+</html>
